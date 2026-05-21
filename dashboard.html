@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarva Mangal - Maintenance Charges Dashboard (Jan-May 2026)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+        .header { background: linear-gradient(135deg, #1a237e, #283593); color: white; padding: 20px 30px; text-align: center; }
+        .header h1 { font-size: 1.6rem; margin-bottom: 5px; }
+        .header p { opacity: 0.85; font-size: 0.9rem; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .filters { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); align-items: center; }
+        .filters label { font-weight: 600; font-size: 0.85rem; color: #555; }
+        .filters select, .filters input { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.85rem; min-width: 160px; }
+        .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .kpi-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; border-top: 4px solid #1a237e; }
+        .kpi-card h3 { font-size: 0.8rem; text-transform: uppercase; color: #777; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .kpi-card .value { font-size: 1.8rem; font-weight: 700; color: #1a237e; }
+        .kpi-card .sub { font-size: 0.75rem; color: #999; margin-top: 5px; }
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .chart-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .chart-card h3 { font-size: 0.95rem; color: #333; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .chart-card canvas { max-height: 300px; }
+        .full-width { grid-column: 1 / -1; }
+        .table-section { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; overflow-x: auto; }
+        .table-section h3 { font-size: 0.95rem; color: #333; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th { background: #1a237e; color: white; padding: 10px 8px; text-align: left; position: sticky; top: 0; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f5f7ff; }
+        tr.negative { color: #2e7d32; }
+        tr.high-outstanding { background: #fff3f3; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff8e1; color: #f57f17; }
+        .footer { text-align: center; padding: 15px; color: #999; font-size: 0.75rem; }
+        @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } .kpi-row { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Sarva Mangal Residential Community</h1>
+    <p>Maintenance Charges Outstanding Dashboard — January to May 2026</p>
+</div>
+<div class="container">
+    <!-- FILTERS -->
+    <div class="filters" id="filterSection">
+        <div>
+            <label>Block:</label><br>
+            <select id="filterBlock" onchange="applyFilters()">
+                <option value="All">All Blocks</option>
+                <option value="A">Block A</option>
+                <option value="B">Block B</option>
+                <option value="C">Block C</option>
+                <option value="D">Block D</option>
+            </select>
+        </div>
+        <div>
+            <label>Payment Status:</label><br>
+            <select id="filterStatus" onchange="applyFilters()">
+                <option value="All">All</option>
+                <option value="Outstanding">Has Outstanding</option>
+                <option value="Clear">Fully Paid / Advance</option>
+                <option value="NoPay">No Payment Made</option>
+            </select>
+        </div>
+        <div>
+            <label>Search Owner:</label><br>
+            <input type="text" id="filterSearch" placeholder="Type owner name..." oninput="applyFilters()">
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="chart-grid">
+        <div class="chart-card">
+            <h3>Ageing Analysis (Outstanding by Duration)</h3>
+            <canvas id="chartAgeing"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Monthly Collection Trend (Jan–May 2026)</h3>
+            <canvas id="chartMonthly"></canvas>
+        </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="chart-grid">
+        <div class="chart-card">
+            <h3>Top 10 Outstanding Owners</h3>
+            <canvas id="chartTop10"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Monthly Collection & Cumulative Trend</h3>
+            <canvas id="chartCumulative"></canvas>
+        </div>
+    </div>
+
+    <!-- DATA TABLE -->
+    <div class="table-section">
+        <h3>Detailed Owner-wise Payment & Outstanding Table</h3>
+        <div style="max-height:500px; overflow-y:auto;">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Villa No.</th><th>Owner Name</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Total Paid</th><th>Outstanding</th><th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="footer">Dashboard generated for Sarva Mangal Residential Community | Data: Owner_Summary Sheet | Period: Jan–May 2026</div>
+<script>
+// ====== RAW DATA ======
+const rawData = [
+    {villa:"D 1",owner:"D. Abhimanyu & Amrutha Abhimanyu",jan:3000,feb:3000,mar:0,apr:3000,may:0,total:9000,outstanding:1500},
+    {villa:"D 2",owner:"Shyamala Krishnan",jan:1500,feb:0,mar:4500,apr:0,may:0,total:6000,outstanding:3000},
+    {villa:"D 3",owner:"Aishwarya Anandanathan",jan:0,feb:0,mar:6000,apr:0,may:0,total:6000,outstanding:3000},
+    {villa:"D 4",owner:"Vishwanath Mohan",jan:0,feb:0,mar:0,apr:0,may:18000,total:18000,outstanding:-16500},
+    {villa:"D 5",owner:"S. Shanthi",jan:0,feb:0,mar:0,apr:0,may:0,total:0,outstanding:22500},
+    {villa:"D 6",owner:"Subadra & Thirumudi",jan:1500,feb:1500,mar:0,apr:0,may:0,total:3000,outstanding:4500},
+    {villa:"D 7",owner:"Dr. P.S. Balamurugavel",jan:0,feb:0,mar:13500,apr:3000,may:1500,total:18000,outstanding:6000},
+    {villa:"D 9",owner:"Dr G.K.Kiran Adithya",jan:0,feb:3000,mar:0,apr:3000,may:0,total:6000,outstanding:0},
+    {villa:"C 10",owner:"R.Chetan Kumar",jan:1500,feb:1500,mar:1500,apr:1500,may:1500,total:7500,outstanding:0},
+    {villa:"C 11",owner:"K.Eswari",jan:0,feb:0,mar:0,apr:0,may:31000,total:31000,outstanding:8000},
+    {villa:"C 12",owner:"Selvendran Ayyaswamy",jan:3000,feb:3000,mar:0,apr:3000,may:0,total:9000,outstanding:0},
+    {villa:"C 14",owner:"Latish Babu",jan:1500,feb:1500,mar:0,apr:1500,may:1500,total:6000,outstanding:1500},
+    {villa:"C 15",owner:"S.Periasamy",jan:0,feb:15500,mar:0,apr:0,may:9000,total:24500,outstanding:-6000},
+    {villa:"C 16",owner:"Arunkarthick and Dr.Haripraba",jan:0,feb:0,mar:19500,apr:1500,may:1500,total:22500,outstanding:0},
+    {villa:"C 18-19",owner:"Malathy Sundaram",jan:1500,feb:1500,mar:1500,apr:1500,may:1500,total:7500,outstanding:0},
+    {villa:"B 20-21",owner:"M.Kalaivani Chandramohan",jan:1500,feb:3000,mar:0,apr:1500,may:1500,total:7500,outstanding:0},
+    {villa:"B 22",owner:"N.Naveenkumar & G.Mahalakshmi",jan:1500,feb:1500,mar:1500,apr:1500,may:1500,total:7500,outstanding:3000},
+    {villa:"B 23",owner:"S.V. Sanjeev Kumar",jan:1500,feb:1500,mar:0,apr:0,may:0,total:3000,outstanding:4500},
+    {villa:"B 24",owner:"A.M. Rajkumar & Krishnaveni",jan:0,feb:0,mar:21000,apr:1500,may:1500,total:24000,outstanding:0},
+    {villa:"B 25",owner:"N. Jaya",jan:0,feb:3000,mar:0,apr:1500,may:0,total:4500,outstanding:1500},
+    {villa:"B 27",owner:"S.Rajeswari",jan:1500,feb:1500,mar:0,apr:1500,may:1500,total:6000,outstanding:1500},
+    {villa:"B 28",owner:"Dr. S. Abdhul Salam",jan:0,feb:0,mar:0,apr:0,may:0,total:0,outstanding:24500},
+    {villa:"A 29-30",owner:"Srinivasan Ramamoorthy/ Srividya Devarajan",jan:0,feb:0,mar:15000,apr:0,may:0,total:15000,outstanding:3000},
+    {villa:"A 31-32",owner:"Narasimhan Nagarajan",jan:0,feb:0,mar:0,apr:0,may:0,total:0,outstanding:3000},
+    {villa:"A 33",owner:"Vijayaraghavan & Hema Vijayaraghavan",jan:0,feb:0,mar:0,apr:0,may:13500,total:13500,outstanding:3000},
+    {villa:"A 34",owner:"Sudhakar & Dhanya",jan:0,feb:0,mar:0,apr:0,may:22500,total:22500,outstanding:3000},
+    {villa:"A 36",owner:"K.Thanikai Arasu",jan:1500,feb:1500,mar:1500,apr:0,may:0,total:4500,outstanding:44000},
+    {villa:"A 37",owner:"Bhagath",jan:1500,feb:1500,mar:1500,apr:1500,may:0,total:6000,outstanding:1500},
+    {villa:"A 38",owner:"Manikandan Kumar & Rakeshwari",jan:4500,feb:4500,mar:1500,apr:1500,may:0,total:12000,outstanding:1500},
+    {villa:"B 39",owner:"G.Dachinamoorthy & Pinky Moorthy & DP Mohit",jan:0,feb:0,mar:3000,apr:0,may:1500,total:4500,outstanding:3000},
+    {villa:"B 40",owner:"Raja & Chitra",jan:0,feb:1500,mar:0,apr:3000,may:3000,total:7500,outstanding:0},
+    {villa:"B 41-42",owner:"Sivaramakrishnan",jan:0,feb:0,mar:4500,apr:0,may:0,total:4500,outstanding:3000},
+    {villa:"B 43",owner:"N.Muthu Sivasakthi & G.Meera",jan:0,feb:4500,mar:1500,apr:1500,may:6000,total:13500,outstanding:0},
+    {villa:"B 45",owner:"K. Ramji",jan:1500,feb:21000,mar:1500,apr:1500,may:1500,total:27000,outstanding:0},
+    {villa:"B 46",owner:"Ganesan & Anitha",jan:10000,feb:30000,mar:0,apr:0,may:6500,total:46500,outstanding:0},
+    {villa:"B 47",owner:"Karthik Krishnan & Dr. Soniya Selvam",jan:0,feb:7500,mar:1500,apr:1500,may:0,total:10500,outstanding:1500},
+    {villa:"B 48",owner:"Notrayan Srinivasan",jan:0,feb:0,mar:0,apr:0,may:0,total:0,outstanding:22500},
+    {villa:"A 50",owner:"S Krishnamoorthy & Dr D Champa",jan:36000,feb:0,mar:0,apr:0,may:0,total:36000,outstanding:-1500},
+    {villa:"A 51-52",owner:"Hari Narayan Prasad",jan:0,feb:0,mar:0,apr:0,may:0,total:0,outstanding:9000},
+    {villa:"A 54-55",owner:"P. Rajeev Nair",jan:0,feb:0,mar:0,apr:0,may:10500,total:10500,outstanding:1500},
+    {villa:"A 56",owner:"Gopinath & Mrs Anitha",jan:0,feb:0,mar:0,apr:0,may:0,total:0,outstanding:43000},
+    {villa:"A 57-59",owner:"Dr Shreesha Kumar K",jan:0,feb:0,mar:0,apr:9000,may:0,total:9000,outstanding:0},
+    {villa:"A 60",owner:"Maruthachlamurthi",jan:0,feb:2500,mar:6000,apr:0,may:0,total:8500,outstanding:7500},
+    {villa:"B 61",owner:"N.Rajkumar & A.Judith Mary Deepa",jan:0,feb:0,mar:18000,apr:0,may:0,total:18000,outstanding:1000},
+    {villa:"B 63",owner:"N.Rajkumar & A.Judith Mary Deepa (B63)",jan:0,feb:22500,mar:18000,apr:0,may:0,total:40500,outstanding:-1500},
+    {villa:"B 64",owner:"Thejaswini & Mahadeva Swamy",jan:3000,feb:1500,mar:1500,apr:1500,may:0,total:7500,outstanding:1500},
+    {villa:"B 65",owner:"K. Suseela",jan:1500,feb:1500,mar:1500,apr:0,may:0,total:4500,outstanding:59000},
+    {villa:"B 66",owner:"C.Narayanan",jan:0,feb:0,mar:0,apr:0,may:0,total:0,outstanding:7000},
+    {villa:"B 68",owner:"R.Balaji & S.Venkata Priya",jan:0,feb:0,mar:0,apr:0,may:0,total:0,outstanding:12000},
+    {villa:"B 69",owner:"Rajesh Babu Krishnan",jan:1500,feb:1500,mar:1500,apr:1500,may:1500,total:7500,outstanding:0},
+    {villa:"B 70",owner:"Dr P Manivannan MD & K.Kalaichelvi IRS Retd",jan:0,feb:0,mar:0,apr:0,may:12000,total:12000,outstanding:-1500},
+    {villa:"B 72",owner:"Lt.Col Vimla VR (Retd)",jan:0,feb:4500,mar:0,apr:0,may:4500,total:9000,outstanding:0}
+];
+
+// ====== UTILITY FUNCTIONS ======
+function getBlock(villa) {
+    return villa.trim().charAt(0).toUpperCase();
+}
+
+function formatCurrency(val) {
+    if (val === null || val === undefined) return '₹0';
+    return '₹' + val.toLocaleString('en-IN');
+}
+
+function getStatus(row) {
+    if (row.outstanding <= 0) return 'Clear';
+    if (row.total === 0) return 'NoPay';
+    return 'Outstanding';
+}
+
+// ====== FILTER LOGIC ======
+let filteredData = [...rawData];
+
+function applyFilters() {
+    const block = document.getElementById('filterBlock').value;
+    const status = document.getElementById('filterStatus').value;
+    const search = document.getElementById('filterSearch').value.toLowerCase();
+
+    filteredData = rawData.filter(row => {
+        if (block !== 'All' && getBlock(row.villa) !== block) return false;
+        if (status !== 'All' && getStatus(row) !== status) return false;
+        if (search && !row.owner.toLowerCase().includes(search)) return false;
+        return true;
+    });
+    renderAll();
+}
+
+// ====== RENDER FUNCTIONS ======
+function renderKPIs() {
+    const totalCollected = filteredData.reduce((s, r) => s + r.total, 0);
+    const totalOutstanding = filteredData.reduce((s, r) => s + Math.max(r.outstanding, 0), 0);
+    const totalOwners = filteredData.length;
+    const paidOwners = filteredData.filter(r => r.outstanding <= 0).length;
+    const collectionRate = totalOwners > 0 ? Math.round((paidOwners / totalOwners) * 100) : 0;
+
+    document.getElementById('kpiRow').innerHTML = `
+        <div class="kpi-card">
+            <h3>Total Collection (Jan–May)</h3>
+            <div class="value">${formatCurrency(totalCollected)}</div>
+            <div class="sub">${totalOwners} owners in view</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Total Outstanding</h3>
+            <div class="value" style="color:#c62828">${formatCurrency(totalOutstanding)}</div>
+            <div class="sub">${filteredData.filter(r=>r.outstanding>0).length} owners with dues</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Collection Efficiency</h3>
+            <div class="value" style="color:#2e7d32">${collectionRate}%</div>
+            <div class="sub">${paidOwners} of ${totalOwners} fully paid</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Avg Outstanding / Owner</h3>
+            <div class="value">${formatCurrency(Math.round(totalOutstanding / Math.max(filteredData.filter(r=>r.outstanding>0).length, 1)))}</div>
+            <div class="sub">Among owners with dues</div>
+        </div>
+    `;
+}
+
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    let html = '';
+    filteredData.forEach(row => {
+        const cls = row.outstanding > 10000 ? 'high-outstanding' : (row.outstanding <= 0 ? 'negative' : '');
+        let badge = '';
+        if (row.outstanding <= 0) badge = '<span class="badge badge-success">Clear</span>';
+        else if (row.outstanding > 10000) badge = '<span class="badge badge-danger">High</span>';
+        else badge = '<span class="badge badge-warning">Due</span>';
+        html += `<tr class="${cls}">
+            <td><strong>${row.villa}</strong></td>
+            <td>${row.owner}</td>
+            <td>${formatCurrency(row.jan)}</td>
+            <td>${formatCurrency(row.feb)}</td>
+            <td>${formatCurrency(row.mar)}</td>
+            <td>${formatCurrency(row.apr)}</td>
+            <td>${formatCurrency(row.may)}</td>
+            <td><strong>${formatCurrency(row.total)}</strong></td>
+            <td><strong>${formatCurrency(row.outstanding)}</strong></td>
+            <td>${badge}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+// ====== CHART INSTANCES ======
+let chartAgeing, chartMonthly, chartTop10, chartCumulative;
+
+function destroyCharts() {
+    if (chartAgeing) chartAgeing.destroy();
+    if (chartMonthly) chartMonthly.destroy();
+    if (chartTop10) chartTop10.destroy();
+    if (chartCumulative) chartCumulative.destroy();
+}
+
+function renderCharts() {
+    destroyCharts();
+
+    // --- AGEING ANALYSIS ---
+    const ageingBuckets = { 'No Dues (₹0)': 0, '₹1 - ₹3,000': 0, '₹3,001 - ₹10,000': 0, '₹10,001 - ₹25,000': 0, '₹25,001 - ₹50,000': 0, '> ₹50,000': 0 };
+    filteredData.forEach(r => {
+        const o = r.outstanding;
+        if (o <= 0) ageingBuckets['No Dues (₹0)']++;
+        else if (o <= 3000) ageingBuckets['₹1 - ₹3,000']++;
+        else if (o <= 10000) ageingBuckets['₹3,001 - ₹10,000']++;
+        else if (o <= 25000) ageingBuckets['₹10,001 - ₹25,000']++;
+        else if (o <= 50000) ageingBuckets['₹25,001 - ₹50,000']++;
+        else ageingBuckets['> ₹50,000']++;
+    });
+    chartAgeing = new Chart(document.getElementById('chartAgeing'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(ageingBuckets),
+            datasets: [{ label: 'No. of Owners', data: Object.values(ageingBuckets), backgroundColor: ['#4caf50','#8bc34a','#ffeb3b','#ff9800','#f44336','#9c27b0'] }]
+        },
+        options: { plugins: { legend: { display: false }, datalabels: false }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Count of Owners' } } },
+            plugins: { tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' owners' } } }
+        },
+        plugins: [{
+            id: 'datalabels',
+            afterDatasetsDraw(chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((ds, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, idx) => {
+                        const val = ds.data[idx];
+                        ctx.fillStyle = '#333'; ctx.font = 'bold 12px Segoe UI'; ctx.textAlign = 'center';
+                        ctx.fillText(val, bar.x, bar.y - 5);
+                    });
+                });
+            }
+        }]
+    });
+
+    // --- MONTHLY COLLECTION TREND ---
+    const months = ['Jan','Feb','Mar','Apr','May'];
+    const monthlyTotals = [
+        filteredData.reduce((s,r) => s+r.jan, 0),
+        filteredData.reduce((s,r) => s+r.feb, 0),
+        filteredData.reduce((s,r) => s+r.mar, 0),
+        filteredData.reduce((s,r) => s+r.apr, 0),
+        filteredData.reduce((s,r) => s+r.may, 0)
+    ];
+    chartMonthly = new Chart(document.getElementById('chartMonthly'), {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{ label: 'Collection (₹)', data: monthlyTotals, backgroundColor: '#1a237e', borderRadius: 5 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => '₹' + (v/1000) + 'K' } } } },
+        plugins: [{
+            id: 'datalabels2',
+            afterDatasetsDraw(chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((ds, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, idx) => {
+                        const val = ds.data[idx];
+                        ctx.fillStyle = '#1a237e'; ctx.font = 'bold 11px Segoe UI'; ctx.textAlign = 'center';
+                        ctx.fillText('₹' + (val/1000).toFixed(1) + 'K', bar.x, bar.y - 5);
+                    });
+                });
+            }
+        }]
+    });
+
+    // --- TOP 10 OUTSTANDING ---
+    const top10 = [...filteredData].filter(r => r.outstanding > 0).sort((a,b) => b.outstanding - a.outstanding).slice(0, 10);
+    chartTop10 = new Chart(document.getElementById('chartTop10'), {
+        type: 'bar',
+        data: {
+            labels: top10.map(r => r.villa + ' - ' + r.owner.substring(0, 18)),
+            datasets: [{ label: 'Outstanding (₹)', data: top10.map(r => r.outstanding), backgroundColor: '#c62828', borderRadius: 4 }]
+        },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: v => '₹' + (v/1000) + 'K' } } } },
+        plugins: [{
+            id: 'datalabels3',
+            afterDatasetsDraw(chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((ds, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, idx) => {
+                        const val = ds.data[idx];
+                        ctx.fillStyle = '#333'; ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'left';
+                        ctx.fillText('₹' + val.toLocaleString('en-IN'), bar.x + 5, bar.y + 4);
+                    });
+                });
+            }
+        }]
+    });
+
+    // --- MONTHLY + CUMULATIVE ---
+    let cumulative = [];
+    let cum = 0;
+    monthlyTotals.forEach(v => { cum += v; cumulative.push(cum); });
+    chartCumulative = new Chart(document.getElementById('chartCumulative'), {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [
+                { type: 'bar', label: 'Monthly Collection', data: monthlyTotals, backgroundColor: '#42a5f5', borderRadius: 5, order: 2 },
+                { type: 'line', label: 'Cumulative Collection', data: cumulative, borderColor: '#1a237e', backgroundColor: 'rgba(26,35,126,0.1)', fill: true, tension: 0.3, pointRadius: 5, pointBackgroundColor: '#1a237e', order: 1 }
+            ]
+        },
+        options: { scales: { y: { beginAtZero: true, ticks: { callback: v => '₹' + (v/1000) + 'K' } } }, plugins: { legend: { position: 'top' } } }
+    });
+}
+
+function renderAll() {
+    renderKPIs();
+    renderTable();
+    renderCharts();
+}
+
+// Initial render
+renderAll();
+</script>
+</body>
+</html>
