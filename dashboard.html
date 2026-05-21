@@ -69,6 +69,12 @@
             </select>
         </div>
         <div>
+            <label>Villa No:</label><br>
+            <select id="filterVilla" onchange="applyFilters()">
+                <option value="All">All Villas</option>
+            </select>
+        </div>
+        <div>
             <label>Search Owner:</label><br>
             <input type="text" id="filterSearch" placeholder="Type owner name..." oninput="applyFilters()">
         </div>
@@ -193,14 +199,28 @@ function getStatus(row) {
 // ====== FILTER LOGIC ======
 let filteredData = [...rawData];
 
+// Populate Villa dropdown
+function populateVillaFilter() {
+    const select = document.getElementById('filterVilla');
+    rawData.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.villa;
+        opt.textContent = r.villa;
+        select.appendChild(opt);
+    });
+}
+populateVillaFilter();
+
 function applyFilters() {
     const block = document.getElementById('filterBlock').value;
     const status = document.getElementById('filterStatus').value;
+    const villa = document.getElementById('filterVilla').value;
     const search = document.getElementById('filterSearch').value.toLowerCase();
 
     filteredData = rawData.filter(row => {
         if (block !== 'All' && getBlock(row.villa) !== block) return false;
         if (status !== 'All' && getStatus(row) !== status) return false;
+        if (villa !== 'All' && row.villa !== villa) return false;
         if (search && !row.owner.toLowerCase().includes(search)) return false;
         return true;
     });
