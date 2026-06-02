@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarva Mangal - Maintenance Charges Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1a237e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            max-width: 600px;
+            padding: 40px;
+            text-align: center;
+        }
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        .description {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            opacity: 0.85;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: white;
+            color: #1e3a5f;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .features {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .features h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 14px;
+            letter-spacing: 1px;
+        }
+        .features-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .feature-item::before {
+            content: "✓";
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .footer {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 20px;
+        }
+        .loading {
+            display: none;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .logo {
+                font-size: 2rem;
+            }
+            .features-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">🏘️</div>
+    <h1>Sarva Mangal</h1>
+    <p class="subtitle">Maintenance Charges Dashboard</p>
+    
+    <div class="description">
+        <strong>Interactive Dashboard</strong> for tracking and analyzing maintenance charges (January - May 2026). Real-time filters, advanced analytics, and export capabilities.
+    </div>
+
+    <div class="features">
+        <h3>📊 Dashboard Features</h3>
+        <div class="features-list">
+            <div class="feature-item">Interactive Charts</div>
+            <div class="feature-item">Real-time Filters</div>
+            <div class="feature-item">Export to CSV/PDF</div>
+            <div class="feature-item">Payment Heatmap</div>
+            <div class="feature-item">Smart Alerts</div>
+            <div class="feature-item">Mobile Responsive</div>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <a href="dashboard-enhanced.html" class="btn btn-primary">
+            🚀 Open Enhanced Dashboard
+        </a>
+        <a href="dashboard.html" class="btn btn-secondary">
+            📊 Open Original Dashboard
+        </a>
+    </div>
+
+    <div class="footer">
+        <p>📄 <a href="README.md" style="color: white; text-decoration: underline;">View Documentation</a></p>
+        <p style="margin-top: 10px; font-size: 0.8rem;">For Sarva Mangal Residential Community | Data Period: Jan-May 2026</p>
+    </div>
+</div>
+
+<script>
+    // Redirect to dashboard-enhanced.html after 2 seconds if user hasn't clicked
+    // This ensures users see the landing page first
+    console.log('Dashboard landing page loaded successfully');
+    console.log('GitHub Pages URL: https://sowri70.github.io/Maintenance-Charges-Sarva-Mangal/');
+</script>
+</body>
+</html>
